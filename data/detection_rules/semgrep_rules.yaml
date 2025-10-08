@@ -1,0 +1,227 @@
+rules:
+  # ===== SQL INJECTION RULES (CWE-89) =====
+  - id: python-sql-injection-string-concat
+    pattern-either:
+      - pattern: |
+          $SQL = "..." + $USER_INPUT + "..."
+          ...
+          $DB.execute($SQL)
+      - pattern: |
+          $SQL = f"...{$USER_INPUT}..."
+          ...
+          $DB.execute($SQL)
+      - pattern: |
+          $SQL = "...{}...".format($USER_INPUT)
+          ...
+          $DB.execute($SQL)
+      - pattern: |
+          $SQL = "..." % $USER_INPUT
+          ...
+          $DB.execute($SQL)
+    message: Possible SQL injection via string concatenation/formatting
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: A03:2021
+      confidence: HIGH
+
+  - id: javascript-sql-injection-template-literal
+    pattern-either:
+      - pattern: |
+          $SQL = `... ${$USER_INPUT} ...`
+          ...
+          $DB.query($SQL)
+      - pattern: |
+          $SQL = "..." + $USER_INPUT + "..."
+          ...
+          $DB.query($SQL)
+    message: Possible SQL injection via template literal/concatenation
+    languages: [javascript, typescript]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: A03:2021
+      confidence: HIGH
+
+  - id: java-sql-injection-string-concat
+    pattern-either:
+      - pattern: |
+          String $SQL = "..." + $USER_INPUT + "...";
+          ...
+          $STMT.executeQuery($SQL)
+      - pattern: |
+          String $SQL = String.format("...", $USER_INPUT);
+          ...
+          $STMT.executeQuery($SQL)
+    message: Possible SQL injection via string concatenation
+    languages: [java]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: A03:2021
+      confidence: HIGH
+
+  # ===== OS COMMAND INJECTION RULES (CWE-78) =====
+  - id: python-command-injection-os-system
+    pattern-either:
+      - pattern: os.system(f"... {$USER_INPUT} ...")
+      - pattern: os.system("..." + $USER_INPUT + "...")
+      - pattern: os.system("...".format($USER_INPUT))
+      - pattern: os.popen(f"... {$USER_INPUT} ...")
+      - pattern: os.popen("..." + $USER_INPUT + "...")
+    message: Command injection via os.system/os.popen with user input
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: A03:2021
+      confidence: HIGH
+
+  - id: python-command-injection-subprocess-shell
+    pattern-either:
+      - pattern: subprocess.call(f"... {$USER_INPUT} ...", shell=True)
+      - pattern: subprocess.call("..." + $USER_INPUT + "...", shell=True)
+      - pattern: subprocess.run(f"... {$USER_INPUT} ...", shell=True)
+      - pattern: subprocess.run("..." + $USER_INPUT + "...", shell=True)
+      - pattern: subprocess.check_output(f"... {$USER_INPUT} ...", shell=True)
+      - pattern: subprocess.Popen(f"... {$USER_INPUT} ...", shell=True)
+    message: Command injection via subprocess with shell=True
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: A03:2021
+      confidence: HIGH
+
+  - id: javascript-command-injection-exec
+    pattern-either:
+      - pattern: |
+          exec(`... ${$USER_INPUT} ...`)
+      - pattern: |
+          exec("..." + $USER_INPUT + "...")
+      - pattern: |
+          child_process.exec(`... ${$USER_INPUT} ...`)
+    message: Command injection via exec with user input
+    languages: [javascript, typescript]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: A03:2021
+      confidence: HIGH
+
+  - id: java-command-injection-runtime-exec
+    pattern-either:
+      - pattern: Runtime.getRuntime().exec("..." + $USER_INPUT + "...")
+      - pattern: Runtime.getRuntime().exec(String.format("...", $USER_INPUT))
+    message: Command injection via Runtime.exec with string concatenation
+    languages: [java]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: A03:2021
+      confidence: HIGH
+
+  # ===== CROSS-SITE SCRIPTING RULES (CWE-79) =====
+  - id: python-xss-flask-no-escape
+    pattern-either:
+      - pattern: return f"<...>{$USER_INPUT}</...>"
+      - pattern: return "<...>" + $USER_INPUT + "</...>"
+      - pattern: return "<...>{}...</...>".format($USER_INPUT)
+    message: Possible XSS via unescaped user input in HTML
+    languages: [python]
+    severity: WARNING
+    metadata:
+      cwe: CWE-79
+      owasp: A03:2021
+      confidence: MEDIUM
+
+  - id: javascript-xss-innerhtml
+    pattern-either:
+      - pattern: $ELEMENT.innerHTML = $USER_INPUT
+      - pattern: $ELEMENT.outerHTML = $USER_INPUT
+      - pattern: document.write($USER_INPUT)
+    message: Possible XSS via innerHTML/outerHTML/document.write
+    languages: [javascript, typescript]
+    severity: WARNING
+    metadata:
+      cwe: CWE-79
+      owasp: A03:2021
+      confidence: HIGH
+
+  - id: react-xss-dangerous-html
+    pattern: |
+      <$ELEMENT dangerouslySetInnerHTML={{__html: $USER_INPUT}} />
+    message: XSS risk via dangerouslySetInnerHTML with user input
+    languages: [javascript, typescript]
+    severity: WARNING
+    metadata:
+      cwe: CWE-79
+      owasp: A03:2021
+      confidence: HIGH
+
+  - id: javascript-xss-location-href
+    pattern-either:
+      - pattern: window.location = 'javascript:' + $USER_INPUT
+      - pattern: window.location.href = 'javascript:' + $USER_INPUT
+      - pattern: location.href = 'javascript:' + $USER_INPUT
+    message: XSS via javascript: protocol in URL
+    languages: [javascript, typescript]
+    severity: ERROR
+    metadata:
+      cwe: CWE-79
+      owasp: A03:2021
+      confidence: HIGH
+
+  # ===== SECURE PATTERN DETECTION =====
+  - id: python-sql-safe-parameterized
+    pattern-either:
+      - pattern: $DB.execute("... ?", ($PARAMS,))
+      - pattern: $DB.execute("... :$NAME", {$NAME: $VALUE})
+      - pattern: $DB.execute(text("..."), {$PARAMS})
+    message: Safe parameterized SQL query detected
+    languages: [python]
+    severity: INFO
+    metadata:
+      cwe: CWE-89
+      pattern_type: SECURE
+      confidence: HIGH
+
+  - id: python-command-safe-subprocess-list
+    pattern-either:
+      - pattern: subprocess.run([$CMD, $ARGS, ...], ...)
+      - pattern: subprocess.call([$CMD, $ARGS, ...], ...)
+      - pattern: subprocess.Popen([$CMD, $ARGS, ...], ...)
+    message: Safe subprocess call with list arguments
+    languages: [python]
+    severity: INFO
+    metadata:
+      cwe: CWE-78
+      pattern_type: SECURE
+      confidence: HIGH
+
+  - id: python-xss-safe-escape
+    pattern-either:
+      - pattern: escape($USER_INPUT)
+      - pattern: html.escape($USER_INPUT)
+      - pattern: |
+          from html import escape
+          ...
+          escape($USER_INPUT)
+    message: XSS prevented by HTML escaping
+    languages: [python]
+    severity: INFO
+    metadata:
+      cwe: CWE-79
+      pattern_type: SECURE
+      confidence: HIGH
+
+  - id: javascript-xss-safe-textcontent
+    pattern: $ELEMENT.textContent = $USER_INPUT
+    message: XSS prevented by textContent (auto-escaped)
+    languages: [javascript, typescript]
+    severity: INFO
+    metadata:
+      cwe: CWE-79
+      pattern_type: SECURE
+      confidence: HIGH

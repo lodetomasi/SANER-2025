@@ -170,7 +170,7 @@ def main():
 
     results = {
         'metadata': {
-            'description': 'Synthetic data matching ASE 2025 paper statistics',
+            'description': 'Synthetic data matching SANER 2025 paper statistics',
             'models': MODELS,
             'vulnerabilities': VULNERABILITIES,
             'trials_per_config': TRIALS_PER_CONFIG,

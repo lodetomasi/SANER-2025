@@ -1,0 +1,102 @@
+[
+  {
+    "id": "SQL-001",
+    "vulnerability_type": "CWE-89",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "def search_user(username):\n    query = \"SELECT * FROM users WHERE username = '\" + username + \"'\"\n    return db.execute(query).fetchall()",
+    "description": "Direct string concatenation in SQL query",
+    "severity": 9,
+    "exploit": "username = \"admin' OR '1'='1\""
+  },
+  {
+    "id": "SQL-002",
+    "vulnerability_type": "CWE-89",
+    "language": "python",
+    "has_vulnerability": false,
+    "code": "def search_user(username):\n    query = \"SELECT * FROM users WHERE username = ?\"\n    return db.execute(query, (username,)).fetchall()",
+    "description": "Parameterized query with prepared statements",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "SQL-003",
+    "vulnerability_type": "CWE-89",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "def get_products(category):\n    sql = f\"SELECT * FROM products WHERE category = '{category}'\"\n    cursor.execute(sql)\n    return cursor.fetchall()",
+    "description": "f-string formatting in SQL query",
+    "severity": 8,
+    "exploit": "category = \"' OR 1=1 --\""
+  },
+  {
+    "id": "SQL-004",
+    "vulnerability_type": "CWE-89",
+    "language": "javascript",
+    "has_vulnerability": true,
+    "code": "const getUserData = (userId) => {\n  const query = `SELECT * FROM users WHERE id = ${userId}`;\n  return db.query(query);\n};",
+    "description": "Template literal injection in Node.js",
+    "severity": 9,
+    "exploit": "userId = \"1 OR 1=1\""
+  },
+  {
+    "id": "SQL-005",
+    "vulnerability_type": "CWE-89",
+    "language": "javascript",
+    "has_vulnerability": false,
+    "code": "const getUserData = (userId) => {\n  const query = 'SELECT * FROM users WHERE id = $1';\n  return db.query(query, [userId]);\n};",
+    "description": "Parameterized query in Node.js",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "SQL-006",
+    "vulnerability_type": "CWE-89",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "def login(username, password):\n    query = \"SELECT * FROM users WHERE username='{}' AND password='{}'\".format(username, password)\n    return db.execute(query).fetchone()",
+    "description": "String format method in authentication",
+    "severity": 10,
+    "exploit": "username = \"admin'--\""
+  },
+  {
+    "id": "SQL-007",
+    "vulnerability_type": "CWE-89",
+    "language": "java",
+    "has_vulnerability": true,
+    "code": "public User findUser(String email) {\n    String sql = \"SELECT * FROM users WHERE email = '\" + email + \"'\";\n    return jdbcTemplate.queryForObject(sql, User.class);\n}",
+    "description": "String concatenation in JDBC",
+    "severity": 9,
+    "exploit": "email = \"' OR '1'='1\""
+  },
+  {
+    "id": "SQL-008",
+    "vulnerability_type": "CWE-89",
+    "language": "java",
+    "has_vulnerability": false,
+    "code": "public User findUser(String email) {\n    String sql = \"SELECT * FROM users WHERE email = ?\";\n    return jdbcTemplate.queryForObject(sql, new Object[]{email}, User.class);\n}",
+    "description": "Prepared statement in JDBC",
+    "severity": 0,
+    "exploit": null
+  },
+  {
+    "id": "SQL-009",
+    "vulnerability_type": "CWE-89",
+    "language": "python",
+    "has_vulnerability": true,
+    "code": "def search_orders(status):\n    raw_query = f\"\"\"SELECT o.id, o.total, c.name \n                    FROM orders o JOIN customers c ON o.customer_id = c.id \n                    WHERE o.status = '{status}'\"\"\"\n    return db.execute(raw_query).fetchall()",
+    "description": "Multi-line SQL with f-string injection",
+    "severity": 8,
+    "exploit": "status = \"' OR 1=1 UNION SELECT table_name, null, null FROM information_schema.tables--\""
+  },
+  {
+    "id": "SQL-010",
+    "vulnerability_type": "CWE-89",
+    "language": "python",
+    "has_vulnerability": false,
+    "code": "def search_orders(status):\n    query = \"\"\"SELECT o.id, o.total, c.name \n               FROM orders o JOIN customers c ON o.customer_id = c.id \n               WHERE o.status = :status\"\"\"\n    return db.execute(text(query), {'status': status}).fetchall()",
+    "description": "Named parameters with SQLAlchemy",
+    "severity": 0,
+    "exploit": null
+  }
+]

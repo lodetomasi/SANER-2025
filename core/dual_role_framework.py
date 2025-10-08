@@ -76,7 +76,7 @@ VULNERABILITY_PATTERNS = {
 # Secure patterns that indicate proper mitigation
 SECURE_PATTERNS = {
     'CWE-89 (SQL Injection)': [
-        'execute.*?,.*?\)',  # Parameterized query (?,)
+        r'execute.*?,.*?\)',  # Parameterized query (?,)
         'executemany',  # Batch parameterized
         'prepared',  # Prepared statement
         'bind',  # Parameter binding
@@ -84,7 +84,7 @@ SECURE_PATTERNS = {
     'CWE-78 (Command Injection)': [
         'shlex.quote',  # Proper escaping
         'shell=False',  # No shell
-        'list\[',  # Command as list
+        r'list\[',  # Command as list
     ],
     'CWE-79 (XSS)': [
         'textContent',  # Safe text

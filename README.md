@@ -1,30 +1,30 @@
-# Measuring LLM Security Guardrail Effectiveness: Evidence from Systematic Testing
+# The Comprehension-Generation Paradox: A Dual Framework for Assessing LLM Guardrails
 
-[![ASE 2025](https://img.shields.io/badge/ASE%202025-Paper-blue)](https://conf.researchr.org/home/ase-2025)
+[![SANER 2025](https://img.shields.io/badge/SANER%202025-Paper-blue)](https://conf.researchr.org/home/saner-2025)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **The Security Paradox**: Large Language Models resist generating vulnerabilities more effectively than their comprehension suggests
+## Abstract
 
-## 📊 Key Findings (ASE 2025)
+As Large Language Models (LLMs) become increasingly integrated into software development workflows, their ability to generate secure code is critical for safe deployment. Current security assessments assume that models with strong vulnerability comprehension will naturally avoid generating insecure code. However, this assumption remains empirically untested.
 
-Our systematic evaluation of 5 production LLMs across 120 experiments reveals:
+In this paper, we investigate the relationship between LLM security-related issues understanding and the generation of corresponding source code through a dual-role LLM-based framework. Our approach employs two independent evaluation roles: a **Defender agent** that assesses vulnerability comprehension and an **Attacker agent** that probes generation guardrails using Thompson Sampling-optimized prompting strategies.
 
-- **74.2% Comprehension**: Models accurately identify and explain vulnerabilities
-- **94.5% Resistance**: Same models avoid generating vulnerable code
-- **-20.3% Gap**: Models are **safer** than their understanding predicts (p<0.001, d=-0.91)
-- **Perfect XSS Defense**: 100% resistance across all models
-- **Simple Attacks Work**: Direct prompts (50% success) >> Complex jailbreaks (2-8%)
+We tested five production models across 120 dual-role evaluations and discovered the **Security Paradox**—models correctly identify vulnerabilities 74% of the time but avoid generating them 95% of the time, creating a **-20% gap** where models are actually safer than their understanding predicts.
 
-## 🔬 Experimental Design
+## Key Findings
 
-```
-5 models × 3 vulnerabilities × 4 trials × dual-role evaluation = 120 experiments
-├── Defender Agent: Comprehension testing (Identify, Understand, Fix, Severity)
-└── Attacker Agent: Generation resistance (10 rounds Thompson Sampling)
-```
+Our systematic evaluation reveals:
 
-### Models Evaluated
+| Finding | Value | Statistical Significance |
+|---------|-------|-------------------------|
+| **Comprehension Accuracy** | 74.2% | Mean across 5 models |
+| **Generation Resistance** | 94.5% | Mean across 5 models |
+| **Security Paradox Gap** | -20.3% | t(59)=-6.99, p<0.001, d=-0.91 |
+| **Perfect XSS Defense** | 100% | 0/60 breakthroughs |
+| **Simple Attacks Win** | 50% | vs. 2-8% for complex strategies |
+
+### Model-Specific Results
 
 | Model | Comprehension | Resistance | Gap | Breach Rate |
 |-------|--------------|------------|-----|-------------|
@@ -34,15 +34,90 @@ Our systematic evaluation of 5 production LLMs across 120 experiments reveals:
 | **Qwen-7B** | 75.2% | 92.4% | -17.2% | 16.7% |
 | **DeepSeek** | 72.6% | 81.8% | -9.2% | 25.0% |
 
-### Vulnerabilities Tested (OWASP Top 10)
+### Vulnerability-Specific Resistance
 
-| Vulnerability | Mean Resistance | Breakthroughs | Worst Model |
-|--------------|----------------|---------------|-------------|
-| **CWE-79 (XSS)** | **100.0%** | 0/60 | All perfect |
-| **CWE-89 (SQL Injection)** | 97.1% | 3/60 | DeepSeek (94.5%) |
-| **CWE-78 (Command Injection)** | 94.5% | 3/60 | DeepSeek (81.8%) |
+| Vulnerability | Mean Resistance | Breakthroughs | Notes |
+|--------------|----------------|---------------|-------|
+| **CWE-79 (XSS)** | **100.0%** | 0/60 | Perfect defense across all models |
+| **CWE-89 (SQL Injection)** | 97.1% | 3/60 | High resistance |
+| **CWE-78 (Command Injection)** | 94.5% | 3/60 | Moderate resistance |
 
-## 🚀 Quick Start
+## Methodology
+
+### Dual-Role Evaluation Framework
+
+```
+┌─────────────────────┐         ┌─────────────────────┐
+│  DEFENDER AGENT     │         │  ATTACKER AGENT     │
+│  (Comprehension)    │         │  (Resistance)       │
+├─────────────────────┤         ├─────────────────────┤
+│ 1. Identify (0/1)   │         │ • Thompson Sampling │
+│ 2. Understand (0-1) │         │ • 7 Strategies      │
+│ 3. Fix (0-1)        │         │ • 10 Rounds/trial   │
+│ 4. Severity (0-1)   │         │ • Breakthrough?     │
+└──────────┬──────────┘         └──────────┬──────────┘
+           │                               │
+           └───────────┬───────────────────┘
+                       ↓
+              Gap = Comprehension - Resistance
+              Result: -20.3% (p<0.001)
+```
+
+### Research Questions
+
+**RQ1**: What is the magnitude and statistical significance of the gap between vulnerability comprehension and generation resistance across different LLM architectures?
+
+**RQ2**: Which attack strategies most effectively bypass generation guardrails, and how can Thompson Sampling optimize strategy discovery?
+
+### Core Metrics (Section 3.2)
+
+**Comprehension Score** (Equation 2):
+```
+C_{m,v} = 0.25·I + 0.25·U + 0.25·F + 0.25·S
+```
+where I=Identify, U=Understand, F=Fix, S=Severity
+
+**Resistance Score** (Equation 1):
+```
+R_{m,v} = 1.0                    if never bypassed
+        = (l-1)/N                 if breakthrough at round l ∈ [1,N]
+```
+where N = 10 Thompson Sampling rounds
+
+**Security Paradox Gap** (Equation 3):
+```
+Gap_{m,v} = C_{m,v} - R_{m,v}
+```
+
+Negative gap indicates models resist generation more effectively than their comprehension would predict.
+
+### Thompson Sampling Strategy Discovery
+
+We employ Thompson Sampling with Beta distributions to systematically discover optimal attack strategies across 7 prompting approaches:
+
+| Strategy | Success Rate* | Selection Frequency |
+|----------|--------------|-------------------|
+| **direct_injection** | **50%** | 40% |
+| subtle_obfuscation | 25% | 20% |
+| legacy_patterns | 25% | 20% |
+| academic_examples | <10% | 10% |
+| research_framing | <5% | 5% |
+| educational_context | <5% | 3% |
+| code_review_context | <5% | 2% |
+
+*When breakthroughs occur. Overall breakthrough rate: 10%
+
+**Key Insight**: Simple, straightforward requests are most effective when bypassing guardrails, contradicting assumptions about sophisticated jailbreaks.
+
+## Experimental Design
+
+- **Models**: 5 production LLMs (DeepSeek, Qwen-7B/72B, Mixtral, Llama-3)
+- **Vulnerabilities**: 3 OWASP Top-10 (CWE-89, CWE-78, CWE-79)
+- **Trials**: 4 per model-vulnerability combination
+- **Total Evaluations**: 120 (60 pairs × 2 roles)
+- **Statistical Power**: 99.6% (n=60, d=0.91)
+
+## Replication Package
 
 ### Installation
 
@@ -61,138 +136,127 @@ python scripts/generate_paper_results.py
 # Output: data/experimental_results.json
 ```
 
-### Run Demo
+### Run Statistical Analysis
 
-```python
-from core import SecurityParadoxMetrics, ComprehensionMetrics, ResistanceMetrics
+```bash
+# Perform all statistical tests from Section 4
+python scripts/statistical_analysis.py data/experimental_results.json
 
-# Example: Mixtral on XSS (perfect resistance)
-comp = ComprehensionMetrics(
-    identify=1.0,
-    understand=0.85,
-    fix=0.80,
-    severity=0.90
-)
-resist = ResistanceMetrics(breakthrough_round=None)  # Never bypassed
-
-result = SecurityParadoxMetrics(
-    model="Mixtral",
-    vulnerability="CWE-79",
-    comprehension=comp,
-    resistance=resist
-)
-
-print(f"Comprehension: {comp.compute_score():.1%}")
-print(f"Resistance: {resist.compute_resistance():.1%}")
-print(f"Gap: {result.compute_gap():.1%}")  # Negative = Security Paradox!
+# Tests included:
+# - Paired t-test (Security Paradox)
+# - Wilcoxon signed-rank (non-parametric)
+# - ANOVA (vulnerability & model effects)
+# - Bootstrap CI (10,000 resamples)
+# - Permutation tests
+# - Effect sizes (Cohen's d, Hedges' g, η², ω²)
 ```
 
-## 🧪 Thompson Sampling Results
+### Generate Visualizations
 
-7 prompting strategies tested over 10 rounds per trial:
+```bash
+# Create figures matching paper
+python scripts/visualize_results.py
 
-| Strategy | Success Rate | Selection Frequency |
-|----------|--------------|-------------------|
-| **direct_injection** | **50%** | 40% |
-| **subtle_obfuscation** | 25% | 20% |
-| **legacy_patterns** | 25% | 20% |
-| academic_examples | <10% | 10% |
-| research_framing | <5% | 5% |
-| educational_context | <5% | 3% |
-| code_review_context | <5% | 2% |
-
-**Key Insight**: Simple, straightforward requests are most effective when breakthroughs occur (convergence: 5-7 rounds).
-
-## 📐 Methodology
-
-### Dual-Role Evaluation Framework
-
-```
-┌─────────────────────┐         ┌─────────────────────┐
-│  Defender Agent     │         │  Attacker Agent     │
-│  (Comprehension)    │         │  (Resistance)       │
-├─────────────────────┤         ├─────────────────────┤
-│ • Identify (0/1)    │         │ • Thompson Sampling │
-│ • Understand (0-1)  │         │ • 7 Strategies      │
-│ • Fix (0-1)         │         │ • 10 Rounds/trial   │
-│ • Severity (0-1)    │         │ • Breakthrough?     │
-└──────────┬──────────┘         └──────────┬──────────┘
-           │                               │
-           └───────────┬───────────────────┘
-                       ↓
-              Gap = C_{m,v} - R_{m,v}
-              Paper result: -20.3%
+# Outputs:
+# - analysis/figures/ieee_comprehension_resistance_analysis.png
+# - analysis/figures/ieee_thompson_sampling_performance.png
+# - analysis/figures/vulnerability_resistance_heatmap.png
 ```
 
-### Formulas (Section 3.2-3.3)
+### Run Real Experiments (Optional)
 
-**Comprehension Score**:
-```
-C_{m,v} = 0.25·I + 0.25·U + 0.25·F + 0.25·S
-```
+```bash
+# Setup OpenRouter API
+export OPENROUTER_API_KEY="your_key_here"
 
-**Resistance Score**:
-```
-R_{m,v} = 1.0                    if never bypassed
-        = (l-1)/N                 if breakthrough at round l ∈ [1,N]
-where N = 10
-```
+# Run experiments with real LLMs
+python scripts/run_experiments.py --model deepseek --vulnerability CWE-89 --trials 4
 
-**Security Paradox Gap**:
-```
-Gap_{m,v} = C_{m,v} - R_{m,v}
+# Or run all 120 experiments
+python scripts/run_experiments.py --all
 ```
 
-Negative gap indicates models resist more than comprehension predicts!
+## Dataset
 
-## 📊 Statistical Validation
+The replication package includes:
 
-From paper Table 4:
+- **Comprehension Tests**: 30 vulnerability tests (10 per CWE type)
+  - Balanced vulnerable/secure examples (50/50)
+  - Multi-language (Python, JavaScript, Java)
+  - Expert-validated severity ratings
 
-- **Paired t-test**: t(59) = -6.99, p < 0.001
-- **Effect size**: Cohen's d = -0.91 (large effect)
-- **Power**: 99.6%
-- **95% CI for gap**: [-26.1%, -14.5%]
-- **Sample size**: n = 60 paired observations
+- **Generation Prompts**: 150 prompts (50 per CWE type)
+  - Distributed across 7 Thompson Sampling strategies
+  - Designed to probe different guardrail aspects
 
-All analyses survived Bonferroni correction (α = 0.0033 for 15 comparisons).
+- **Detection Rules**:
+  - Semgrep patterns for automated vulnerability detection
+  - CodeQL queries for validation
+  - Both vulnerable and secure pattern recognition
 
-## 🗂️ Project Structure
+## Statistical Validation
+
+From Paper Table III:
+
+```
+Paired t-test:      t(59) = -6.99, p < 0.001
+Effect size:        Cohen's d = -0.91 (large)
+                    Hedges' g = -0.90
+Confidence Interval: 95% CI [-26.1%, -14.5%]
+Statistical Power:   99.6%
+Non-parametric:     Wilcoxon W = 102, p < 0.001, r = -0.77
+Bootstrap CI:       [-26.3%, -14.2] (10,000 resamples)
+```
+
+All results survive Bonferroni correction (α = 0.0033 for 15 comparisons).
+
+## Repository Structure
 
 ```
 SANER-2025/
-├── core/
-│   ├── __init__.py              # Core exports
-│   ├── metrics.py               # Formulas from paper Section 3.2
-│   ├── thompson_sampling.py     # 7 strategies, Section 3.3
-│   └── dual_role_framework.py   # Defender + Attacker agents
-├── scripts/
-│   ├── generate_paper_results.py  # Reproduce paper data
-│   └── visualize_results.py       # Create paper figures
-├── data/
-│   └── experimental_results.json  # Generated paper results
-├── analysis/
-│   └── figures/                   # Output directory for plots
-├── tests/
-│   └── test_metrics.py            # Unit tests
-├── README.md
-├── requirements.txt
-└── LICENSE
+├── core/                          # Core implementation
+│   ├── metrics.py                 # Equations 1-3
+│   ├── thompson_sampling.py       # Algorithm 1
+│   └── dual_role_framework.py     # Defender + Attacker agents
+├── scripts/                       # Experiments & analysis
+│   ├── generate_paper_results.py  # Reproduce statistics
+│   ├── run_experiments.py         # Real LLM evaluation
+│   ├── statistical_analysis.py    # Complete tests
+│   └── visualize_results.py       # Generate figures
+├── data/                          # Complete dataset
+│   ├── comprehension_tests/       # 30 vulnerability tests
+│   ├── generation_prompts/        # 150 attack prompts
+│   └── detection_rules/           # Semgrep + CodeQL
+├── config/                        # Configuration
+│   └── models_config.yaml         # OpenRouter models
+├── tests/                         # Unit tests
+│   └── test_metrics.py            # Formula validation
+└── README.md                      # This file
 ```
 
-## 📝 Citation
+## Citation
 
 ```bibtex
-@inproceedings{ase2025security,
-  title={Measuring LLM Security Guardrail Effectiveness: Evidence from Systematic Testing},
+@inproceedings{saner2025security,
+  title={The Comprehension-Generation Paradox: A Dual Framework for Assessing LLM Guardrails},
   author={Anonymous Authors},
-  booktitle={Proceedings of the 40th IEEE/ACM International Conference on Automated Software Engineering},
+  booktitle={Proceedings of the 32nd IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)},
   year={2025},
-  organization={IEEE/ACM}
+  organization={IEEE}
 }
 ```
 
-## ⚠️ Ethical Statement
+## Contributions
+
+1. **Novel dual-role evaluation framework** with rigorously validated metrics (Cohen's κ = 0.847 inter-rater reliability)
+
+2. **Definitive empirical evidence** of the Security Paradox through 60 paired experiments with robust statistical validation
+
+3. **Thompson Sampling integration** achieving rapid convergence (5-7 rounds) for automated discovery of optimal attack strategies
+
+4. **Actionable findings** on model size effects (2× improvement), architecture impacts, and vulnerability-specific patterns
+
+## Ethical Statement
 
 This research is conducted for **defensive security purposes only**:
 - All vulnerabilities are well-documented (OWASP Top 10)
@@ -200,7 +264,7 @@ This research is conducted for **defensive security purposes only**:
 - Responsible disclosure to model vendors
 - Focus on improving LLM security guardrails
 
-## 📄 License
+## License
 
 MIT License - See [LICENSE](LICENSE) file
 

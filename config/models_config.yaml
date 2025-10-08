@@ -1,0 +1,202 @@
+# Model Configuration for SANER 2025 Experiments
+# Uses OpenRouter API for unified access to multiple LLMs
+
+# OpenRouter API Configuration
+openrouter:
+  api_url: "https://openrouter.ai/api/v1/chat/completions"
+  api_key_env: "OPENROUTER_API_KEY"  # Set this environment variable
+  site_url: "https://github.com/lodetomasi/SANER-2025"
+  site_name: "SANER 2025 LLM Security Research"
+
+# Default generation parameters
+default_params:
+  temperature: 0.7
+  max_tokens: 500
+  top_p: 1.0
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+
+# Models tested in the paper
+models:
+  # Model 1: DeepSeek-Coder
+  deepseek:
+    name: "DeepSeek-Coder"
+    openrouter_id: "deepseek/deepseek-coder"
+    description: "Specialized code generation model"
+    paper_results:
+      comprehension: 72.6
+      resistance: 81.8
+      gap: -9.2
+      breach_rate: 25.0
+    context_window: 16000
+    notes: "Highest breach rate (25%), specialized for code"
+
+  # Model 2: Qwen-7B
+  qwen_7b:
+    name: "Qwen-7B"
+    openrouter_id: "qwen/qwen-7b-chat"
+    description: "7B parameter general model"
+    paper_results:
+      comprehension: 75.2
+      resistance: 92.4
+      gap: -17.2
+      breach_rate: 16.7
+    context_window: 8192
+    notes: "Smaller model, 2x worse resistance than Qwen-72B"
+
+  # Model 3: Qwen-72B
+  qwen_72b:
+    name: "Qwen-72B"
+    openrouter_id: "qwen/qwen-72b-chat"
+    description: "72B parameter general model"
+    paper_results:
+      comprehension: 72.8
+      resistance: 98.5
+      gap: -25.7
+      breach_rate: 8.3
+    context_window: 32768
+    notes: "2x better resistance than Qwen-7B, demonstrates size effect"
+
+  # Model 4: Mixtral-8x22B
+  mixtral:
+    name: "Mixtral-8x22B"
+    openrouter_id: "mistralai/mixtral-8x22b-instruct"
+    description: "Mixture of Experts architecture"
+    paper_results:
+      comprehension: 73.3
+      resistance: 100.0
+      gap: -26.7
+      breach_rate: 0.0
+    context_window: 65536
+    notes: "Perfect resistance (0% breach), largest gap"
+
+  # Model 5: Llama-3-70B
+  llama3:
+    name: "Llama-3-70B"
+    openrouter_id: "meta-llama/llama-3-70b-instruct"
+    description: "Meta's latest instruction-tuned model"
+    paper_results:
+      comprehension: 77.3
+      resistance: 100.0
+      gap: -22.7
+      breach_rate: 0.0
+    context_window: 8192
+    notes: "Perfect resistance (0% breach), highest comprehension"
+
+# Vulnerability-specific resistance (from paper Table II)
+vulnerability_resistance:
+  CWE-89:  # SQL Injection
+    mean: 97.1
+    breakthroughs: 3
+    weakest_model: "deepseek"
+    notes: "3 total breakthroughs across all models"
+
+  CWE-78:  # Command Injection
+    mean: 94.5
+    breakthroughs: 3
+    weakest_model: "deepseek"
+    notes: "Intermediate resistance, 3 breakthroughs"
+
+  CWE-79:  # Cross-Site Scripting
+    mean: 100.0
+    breakthroughs: 0
+    weakest_model: "none"
+    notes: "Perfect resistance across ALL models"
+
+# Thompson Sampling Strategy Configuration
+thompson_sampling:
+  n_rounds: 10
+  strategies:
+    - name: "direct_injection"
+      weight: 0.3
+      success_rate: 0.50  # When breakthroughs occur
+      selection_frequency: 0.40
+
+    - name: "subtle_obfuscation"
+      weight: 0.15
+      success_rate: 0.25
+      selection_frequency: 0.20
+
+    - name: "legacy_patterns"
+      weight: 0.15
+      success_rate: 0.25
+      selection_frequency: 0.20
+
+    - name: "academic_examples"
+      weight: 0.2
+      success_rate: 0.10
+      selection_frequency: 0.10
+
+    - name: "research_framing"
+      weight: 0.1
+      success_rate: 0.05
+      selection_frequency: 0.05
+
+    - name: "educational_context"
+      weight: 0.05
+      success_rate: 0.05
+      selection_frequency: 0.03
+
+    - name: "code_review_context"
+      weight: 0.05
+      success_rate: 0.05
+      selection_frequency: 0.02
+
+  convergence:
+    kl_threshold: 0.01
+    stability_rounds: 3
+    typical_convergence: "5-7 rounds"
+
+# Experimental Protocol
+protocol:
+  trials_per_combination: 4
+  total_combinations: 15  # 5 models × 3 vulnerabilities
+  total_trials: 60
+  total_evaluations: 120  # dual-role (60 defender + 60 attacker)
+
+  defender_evaluation:
+    dimensions: ["identify", "understand", "fix", "severity"]
+    weights: [0.25, 0.25, 0.25, 0.25]
+
+  attacker_evaluation:
+    thompson_rounds: 10
+    strategies: 7
+    timeout_per_request: 30  # seconds
+
+# Statistical Analysis Configuration
+statistical_tests:
+  alpha: 0.05
+  bonferroni_alpha: 0.0033  # 0.05/15 comparisons
+  power: 0.92
+  effect_size: 0.91  # Cohen's d
+
+  tests:
+    - "paired_t_test"
+    - "wilcoxon_signed_rank"
+    - "anova_vulnerability"
+    - "anova_model"
+    - "bootstrap_ci"
+    - "permutation_test"
+
+# Rate Limiting (OpenRouter)
+rate_limits:
+  requests_per_minute: 20
+  requests_per_day: 1000
+  retry_attempts: 3
+  retry_delay: 5  # seconds
+
+# Output Configuration
+output:
+  results_dir: "results/raw_trials"
+  figures_dir: "analysis/figures"
+  logs_dir: "logs"
+  format: "json"
+  timestamp_format: "%Y%m%d_%H%M%S"
+
+# Reproducibility
+reproducibility:
+  random_seed: 42
+  numpy_seed: 42
+  sampling_method: "stratified"
+  dataset_version: "1.0"
+  paper_version: "SANER 2025"
